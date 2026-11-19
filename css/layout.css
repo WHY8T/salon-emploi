@@ -1,0 +1,29 @@
+/* layout.css: page structure, mobile first */
+.site-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:max(1rem,env(safe-area-inset-top)) max(var(--pad),calc((100% - 72rem)/2 + var(--pad))) 1rem;
+  border-bottom:1px solid var(--rule)}
+.brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;font:500 1.05rem/1 var(--font-display)}
+.brand img{width:auto;height:1.9rem}
+.head-right{display:flex;align-items:center;gap:1.25rem}
+.edition{display:none;font-size:.85rem;color:var(--bone-dim)}
+.lang{display:flex;gap:.25rem}
+.lang button{min-width:2.5rem;height:2.5rem;font:500 .8rem var(--font-ui);letter-spacing:.06em;color:var(--bone-dim);position:relative}
+.lang button::after{content:"";position:absolute;left:25%;right:25%;bottom:.45rem;height:1px;background:var(--red);transform:scaleX(0);transition:transform .5s var(--ease-out)}
+.lang button[aria-pressed="true"]{color:var(--bone)}
+.lang button[aria-pressed="true"]::after{transform:scaleX(1)}
+
+.stage{max-width:72rem;margin:0 auto;padding:clamp(1.75rem,5vw,3.5rem) var(--pad) 3rem}
+
+.countdown{display:grid;gap:1.25rem}
+.letter{margin-top:1.75rem}
+
+.site-footer{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;max-width:72rem;margin:0 auto;
+  padding:1.5rem var(--pad) max(2rem,env(safe-area-inset-bottom));border-top:1px solid var(--rule);font-size:.85rem;color:var(--bone-dim)}
+
+@media (min-width:40rem){.edition{display:block}}
+@media (min-width:56rem){
+  .countdown{grid-template-columns:1fr auto;align-items:end;column-gap:3rem}
+  .cd-grid,.cd-state{grid-column:1/-1}
+  .cd-meta{text-align:right}
+  .letter{margin-top:2.5rem}
+}
