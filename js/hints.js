@@ -1,5 +1,5 @@
-/* hints.js: "Suivi" full-page overlay with 10 sealed envelopes. Click an unlocked one: the seal breaks,
-   the flap opens, the letter slides out. Locked envelopes shake. */
+/* hints.js: "Suivi" full-page overlay with 10 envelopes. Click one: the envelope flies to the centre, the wax seal
+   cracks, the flap opens, the folded letter slides out, comes forward and unfolds. Locked envelopes shake. */
 (function () {
   var C = SE_CONFIG;
   var root = document.querySelector("[data-drawer-root]"), openBtn = document.querySelector("[data-open-hints]");
@@ -8,6 +8,9 @@
   var ca = root.querySelector(".curtain-a"), cb = root.querySelector(".curtain-b"), progress = root.querySelector("[data-progress]");
   var reader = root.querySelector("[data-reader]"), eb = reader.querySelector(".eb"), flap = reader.querySelector(".eb-flap");
   var paper = reader.querySelector(".eb-paper"), seal = reader.querySelector(".eb-seal");
+  var back = reader.querySelector(".eb-back"), front = reader.querySelector(".eb-front");
+  var panA = paper.querySelector(".pp-a"), panC = paper.querySelector(".pp-c");
+  var ink = paper.querySelector(".eb-ink"), lshadow = paper.querySelector(".pp-shadow"), shards = [];
   var inertEls = [document.querySelector(".site-header"), document.querySelector("main"), document.querySelector(".site-footer")];
   var reduce = matchMedia("(prefers-reduced-motion: reduce)");
   var states = [], progressText = "", isOpen = false, readerOpen = false, lastFocus = null, envBtn = null, tl = null, rt = null, noteTimer = null;
@@ -85,6 +88,33 @@
   }
 
   /* ---------- Envelope reader ---------- */
+  var BG0 = "rgba(5,4,4,0)", BG1 = "rgba(5,4,4,.92)", RATIO = 0.4 / 0.9;   // RATIO = panel height / panel width
+
+  /* Size the letter for this screen and place it (folded) inside the envelope. Returns the geometry. */
+  function layoutLetter() {
+    var er = eb.getBoundingClientRect(), rr = reader.getBoundingClientRect();
+    var w = eb.offsetWidth, H = eb.offsetHeight;
+    var s = Math.min(rr.height * .86 / (w * 1.2), rr.width * .94 / (w * .9), 1.35);    // how much bigger the open letter is than the folded one
+    var pw = w * .9 * s, ph = pw * RATIO, cy = H * .16 + w * .2;                        // folded letter centre sits inside the envelope
+    paper.style.width = pw + "px"; paper.style.height = ph + "px";
+    paper.style.left = (w - pw) / 2 + "px"; paper.style.top = (cy - ph / 2) + "px";
+    ink.style.fontSize = Math.max(15, Math.min(22, pw * .046)) + "px"; ink.style.padding = pw * .09 + "px";
+    return { w: w, H: H, s: s, er: er, rr: rr,
+      toCentreX: rr.left + rr.width / 2 - (er.left + w / 2), toCentreY: rr.top + rr.height / 2 - (er.top + cy) };
+  }
+
+  /* A few flecks of red wax when the seal cracks */
+  function addShards(tl, at, w) {
+    for (var k = 0; k < 9; k++) {
+      var el = document.createElement("span"), sz = 5 + Math.random() * 7, ang = (Math.PI * 2 * k) / 9 + Math.random() * .6, dist = w * (.12 + Math.random() * .16);
+      el.className = "eb-shard"; el.style.width = sz + "px"; el.style.height = sz * (.6 + Math.random() * .6) + "px";
+      el.style.clipPath = "polygon(" + [0, 1, 2, 3].map(function () { return (Math.random() * 100).toFixed(0) + "% " + (Math.random() * 100).toFixed(0) + "%"; }).join(",") + ")";
+      eb.appendChild(el); shards.push(el);
+      tl.set(el, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 }, at)
+        .to(el, { x: Math.cos(ang) * dist, y: Math.sin(ang) * dist * .7 + w * .16, rotation: (Math.random() - .5) * 420, scale: .5, opacity: 0, duration: .85 + Math.random() * .3, ease: "power2.out" }, at);
+    }
+  }
+
   function openReader(i, btn) {
     if (!states[i]) {                                           // sealed: shake + message
       if (window.gsap && !reduce.matches) gsap.to(btn, { keyframes: { x: [0, -8, 8, -5, 5, 0], easeEach: "power1.inOut" }, duration: .5 });
@@ -92,32 +122,76 @@
       noteTimer = setTimeout(function () { progress.textContent = progressText; }, 2400);
       return;
     }
-    var h = SE.t().hints[i];
-    paper.querySelector("p").textContent = h.text; paper.querySelector("p").dir = "auto";
+    var h = SE.t().hints[i], p = paper.querySelector("p");
+    p.textContent = h.text; p.dir = "auto";
     envBtn = btn; readerOpen = true; reader.hidden = false; drawer.inert = true;
+    var L = layoutLetter();
+
     if (animated()) {
+      var br = btn.getBoundingClientRect(), s0 = br.width / L.w;                       // the envelope starts where the clicked one is
+      var dx = br.left + br.width / 2 - (L.er.left + L.w / 2), dy = br.top + br.height / 2 - (L.er.top + L.H / 2);
+      var lift = L.w * .56;                                                           // how far the letter rises to clear the envelope
       reader.classList.remove("static-open");
       if (rt) rt.kill();
-      rt = gsap.timeline({ onReverseComplete: hideReader })
-        .fromTo(reader, { opacity: 0 }, { opacity: 1, duration: .4, ease: "power2.out" }, 0)
-        .fromTo(eb, { y: 70, opacity: 0, scale: .92 }, { y: 0, opacity: 1, scale: 1, duration: .9, ease: "expo.out" }, 0)
-        .fromTo(seal, { scale: 1, opacity: 1, rotation: 0 }, { scale: .2, opacity: 0, rotation: -25, duration: .45, ease: "power3.in" }, .75)
-        .fromTo(flap, { rotationX: 0, transformPerspective: 1200 }, { rotationX: -180, duration: .95, ease: "expo.inOut" }, .9)
-        .set(flap, { zIndex: 1 }, 1.35)                                              // flap goes behind the letter once it is past vertical
-        .fromTo(paper, { yPercent: 52 }, { yPercent: -35, duration: 1.15, ease: "expo.out" }, 1.4)
-        .fromTo(paper.children, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .6, ease: "power3.out", stagger: .08 }, 1.75);
-    } else reader.classList.add("static-open");                                     // reduced motion / no GSAP: show it already open
+      shards.forEach(function (n) { n.remove(); }); shards = [];
+
+      gsap.set(reader, { backgroundColor: BG0 });
+      gsap.set(eb, { x: dx, y: dy, scale: s0, opacity: 1, transformOrigin: "50% 50%" });
+      gsap.set(paper, { transformPerspective: 1500, transformOrigin: "50% 50%", scale: 1 / L.s, x: 0, y: 0, rotation: 0, zIndex: 2 });
+      gsap.set(panA, { rotationX: -180, z: 2 }); gsap.set(panC, { rotationX: 180, z: 1 });   // both folded onto the middle panel
+      gsap.set([ink, lshadow], { opacity: 0 });
+      gsap.set(flap, { rotationX: 0, transformPerspective: 1200, zIndex: 4 });
+      gsap.set(seal, { scale: 1, opacity: 1, rotation: 0, y: 0 });
+      gsap.set([back, front], { y: 0, opacity: 1 });
+      btn.style.visibility = "hidden";
+
+      rt = gsap.timeline()
+        /* 1. the envelope you clicked flies to the middle while the room dims */
+        .to(reader, { backgroundColor: BG1, duration: .7, ease: "power2.out" }, 0)
+        .to(eb, { x: 0, y: 0, scale: 1, duration: .95, ease: "power3.inOut" }, 0)
+        /* 2. the wax seal swells, then cracks and falls away */
+        .to(seal, { scale: 1.07, duration: .2, ease: "power2.out" }, .85)
+        .to(seal, { scale: .55, opacity: 0, rotation: -14, y: L.w * .03, duration: .55, ease: "power2.in" }, 1.05);
+      addShards(rt, 1.08, L.w);
+      rt
+        /* 3. the flap lifts and folds back */
+        .to(flap, { rotationX: -180, duration: 1.05, ease: "power2.inOut" }, 1.1)
+        .set(flap, { zIndex: 1 }, 1.62)
+        /* 4. the folded letter slides up out of the envelope, with a slight sway */
+        .to(paper, { y: -lift, duration: 1.15, ease: "power2.out" }, 1.75)
+        .to(paper, { rotation: -1.6, duration: .7, ease: "sine.inOut" }, 1.75)
+        .set(paper, { zIndex: 6 }, 2.85)
+        /* 5. it comes forward to the middle of the screen while the envelope drops away */
+        .to(paper, { x: L.toCentreX, y: L.toCentreY, scale: 1, rotation: 0, duration: 1.05, ease: "power3.inOut" }, 3)
+        .to([back, front, flap], { y: L.w * .25, opacity: 0, duration: .85, ease: "power2.in" }, 3.05)
+        /* 6. it unfolds: top third falls open, then the bottom third */
+        .to(panA, { rotationX: 0, z: 0, duration: .95, ease: "power2.inOut" }, 3.4)
+        .to(panC, { rotationX: 0, z: 0, duration: .95, ease: "power2.inOut" }, 3.72)
+        .to(lshadow, { opacity: 1, duration: .9, ease: "power1.out" }, 3.7)
+        /* 7. the writing appears */
+        .to(ink, { opacity: 1, duration: .8, ease: "power1.out" }, 4.3);
+    } else {                                                    // reduced motion / no GSAP: show the finished letter, unfolded
+      reader.classList.add("static-open");
+      paper.style.transform = "translate(" + L.toCentreX + "px," + L.toCentreY + "px)";
+    }
     reader.querySelector(".reader-close").focus({ preventScroll: true });
   }
   function hideReader() {
     reader.hidden = true; drawer.inert = false; readerOpen = false;
-    if (window.gsap) gsap.set([reader, eb, flap, paper, seal, paper.children], { clearProps: "all" });
-    if (envBtn) envBtn.focus({ preventScroll: true });
+    shards.forEach(function (n) { n.remove(); }); shards = [];
+    if (window.gsap) gsap.set([reader, eb, flap, paper, panA, panC, ink, lshadow, seal, back, front], { clearProps: "all" });
+    paper.removeAttribute("style"); ink.removeAttribute("style");
+    if (envBtn) { envBtn.style.visibility = ""; envBtn.focus({ preventScroll: true }); }
   }
   function closeReader() {
     if (!readerOpen) return;
     readerOpen = false;
-    if (animated() && rt) rt.timeScale(1.8).reverse(); else hideReader();
+    if (rt) rt.kill();
+    if (animated()) {                                           // short and soft: the letter fades while the room brightens again
+      rt = gsap.timeline({ onComplete: hideReader })
+        .to(eb, { opacity: 0, y: 24, scale: .97, duration: .4, ease: "power2.in" }, 0)
+        .to(reader, { backgroundColor: BG0, duration: .45, ease: "power2.out" }, .05);
+    } else hideReader();
   }
 
   openBtn.addEventListener("click", open);

@@ -32,4 +32,4 @@ All texts are in `js/config.js` under `i18n`. Wrap a word in *stars* to show it 
 Fonts are set by `--font-display` and `--font-ui` in `css/base.css`, and loaded by the Google Fonts link in `index.html`. To change them, edit those two variables and the link (Arabic uses Cairo and Noto Naskh Arabic).
 
 ## Hints
-Each hint is a sealed envelope. Click an unlocked one: the seal breaks, the flap opens and the letter slides out. Sealed ones shake.
+Each hint is an envelope. Click an unlocked one: it flies to the centre, the wax seal cracks, the flap opens, the folded letter slides out, comes forward and unfolds. Sealed ones shake. The animation is in `js/hints.js` (`openReader`), the look of the letter and envelope is in `css/components.css`.
