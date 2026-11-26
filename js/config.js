@@ -13,16 +13,16 @@
 
   /* ---- THE 10 HINTS (title + text). Same list used for FR / EN / AR. Order = envelope 01 to 10. ---- */
   var HINTS = [
-    { title: "Audit", text: "بلاصة events تدخلو بصح ما عندك وين تروح الباب مقفول." },
-    { title: "Trinda", text: "تكوبات بين الدار الكبيرة والصغيرة، الدار الكبيرة تشوف بصح متفوتلهاش" },
-    { title: "La belle face, le blond te CHEC.", text: "Il existe des limites physiques et d’autres que l’on construit même... parfois, elles se font face." },
+    { title: "Audit", text: "بلاصة يديروا فيها des événements، معندك وين تروح\nالباب مقفول" },
+    { title: "Trinda", text: "تقطعت العلاقات بين الدار الكبيرة والصغيرة.\nالدار الكبيرة تشوفها بصح متروحلهاش." },
+    { title: "La belle face, le blond te CHEC.", text: "بلاصة تبدل الجو فيها الجو وترتاح من جو القراية؛ كون\nتصيب متخرج منها، الدالة تاعنا أخرج خلينا ندخل" },
     { title: "Salle des jeux", text: "Espace Faji Fih 3la Rohk Mn Stress Ta3 9raya." },
-    { title: "Riad", text: "بلاصة تلمنا في la pose يدير retard 24/7 و تشارجي عنده énergie teak" },
-    { title: "Affichage doc", text: "باينا جوهرة inps و منجم المعلومات، راح تصيبني قدامك\n\nNe cherche pas loin." },
+    { title: "Riad", text: "بلاصة تلمنا في la pose مفتوحة 24/7 يدير Retard\nونشارجو énergie تاعنا عندو." },
+    { title: "Affichage doc", text: "ما بين جوهرة INPS ومتجر المعلومات، راح تصيبني\nقدامك؛ ne cherche pas loin" },
     { title: "Espace ouvert", text: "Les murs sont transparents, mais le lieu reste à découvrir." },
     { title: "Hsison", text: "محبوب الجماهير، دخلو بال VISA سربي لروحك الدار دارك" },
     { title: "Foyer", text: "رجلك معندكش وين تحطها وقت la pose\nIci café et restaurant" },
-    { title: "Corner check off", text: "Studio bla Studio ; créativité rule.\n\nLe même style ; outfit hna yetcheka" }
+    { title: "Corner check off", text: "Studio Bla Studio ; créativité nulle ; le même style.\noutfit of The day hna yetcheka." }
   ];
 
   window.SE_CONFIG = {

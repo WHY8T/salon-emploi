@@ -536,7 +536,7 @@ html.drawer-open {
   inset-inline-start: 9%;
   bottom: 9%;
   z-index: 3;
-  color: #4a2e05;
+  color: #ece6dc;
   font: 300 clamp(1.6rem, 6vw, 2.3rem)/1 var(--font-display)
 }
 
@@ -545,7 +545,7 @@ html.drawer-open {
   inset-inline-end: 9%;
   bottom: 11%;
   z-index: 3;
-  color: #4a2e05;
+  color: #ece6dc;
   opacity: .8
 }
 
